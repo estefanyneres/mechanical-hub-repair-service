@@ -1,0 +1,37 @@
+aws:
+  region: ${AWS_REGION:us-east-1}
+
+dynamodb:
+  table-name: ${DYNAMODB_TABLE_NAME:mechanical-hub-repair-service}
+
+stock-service:
+  url: ${STOCK_SERVICE_URL:http://stock-service.stock-service.svc.cluster.local}
+
+spring:
+  rabbitmq:
+    host: ${RABBITMQ_HOST}
+    port: ${RABBITMQ_PORT:5672}
+    username: ${RABBITMQ_USERNAME}
+    password: ${RABBITMQ_PASSWORD}
+
+api:
+  security:
+    jwt:
+      secret: ${JWT_SECRET}
+
+logging:
+  level:
+    root: WARN
+    com.fiap.mechanical_hub.repair_service: INFO
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  statsd:
+    metrics:
+      export:
+        flavor: datadog
+        host: ${DD_AGENT_HOST:localhost}
+        port: 8125

@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: repair-service-config
+  namespace: repair-service
+data:
+  AWS_REGION: "us-east-1"
+  DYNAMODB_TABLE_NAME: "mechanical-hub-repair-service"
+  RABBITMQ_HOST: "rabbitmq.rabbitmq.svc.cluster.local"
+  RABBITMQ_PORT: "5672"
+  RABBITMQ_USERNAME: "mechanical-hub"
+  STOCK_SERVICE_URL: "http://stock-service.stock-service.svc.cluster.local"
+  TZ: "America/Sao_Paulo"
+  SPRING_PROFILES_ACTIVE: "prod"
