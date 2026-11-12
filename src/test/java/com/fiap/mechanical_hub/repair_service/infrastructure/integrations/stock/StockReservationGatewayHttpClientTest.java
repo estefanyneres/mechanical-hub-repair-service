@@ -2,6 +2,7 @@ package com.fiap.mechanical_hub.repair_service.infrastructure.integrations.stock
 
 import com.fiap.mechanical_hub.repair_service.application.gateways.MaterialQuantity;
 import com.fiap.mechanical_hub.repair_service.application.gateways.StockReservationResult;
+import com.fiap.mechanical_hub.repair_service.infrastructure.security.ServiceTokenIssuer;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -9,6 +10,9 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.List;
@@ -17,6 +21,7 @@ import java.util.UUID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -29,13 +34,17 @@ class StockReservationGatewayHttpClientTest {
     @Mock
     private RestTemplate restTemplate;
 
+    @Mock
+    private ServiceTokenIssuer serviceTokenIssuer;
+
     private StockReservationGatewayHttpClient client;
     private UUID serviceOrderId;
     private UUID materialId;
 
     @BeforeEach
     void setUp() {
-        client = new StockReservationGatewayHttpClient(restTemplate, STOCK_SERVICE_URL);
+        lenient().when(serviceTokenIssuer.issue()).thenReturn("fake-token");
+        client = new StockReservationGatewayHttpClient(restTemplate, serviceTokenIssuer, STOCK_SERVICE_URL);
         serviceOrderId = UUID.randomUUID();
         materialId = UUID.randomUUID();
     }
@@ -43,8 +52,12 @@ class StockReservationGatewayHttpClientTest {
     @Test
     @DisplayName("Deve retornar sucesso quando o stock-service responde reserved=true")
     void reserve_ShouldReturnSuccess_WhenServiceRespondsReserved() {
-        when(restTemplate.postForObject(eq(STOCK_SERVICE_URL + "/stock/reservations"), any(), eq(StockReservationResponseDto.class)))
-                .thenReturn(new StockReservationResponseDto(true, null));
+        when(restTemplate.exchange(
+                eq(STOCK_SERVICE_URL + "/stock/reservations"),
+                eq(HttpMethod.POST),
+                any(HttpEntity.class),
+                eq(StockReservationResponseDto.class)))
+                .thenReturn(ResponseEntity.ok(new StockReservationResponseDto(true, null)));
 
         StockReservationResult result = client.reserve(serviceOrderId, List.of(new MaterialQuantity(materialId, 2)));
 
@@ -54,8 +67,12 @@ class StockReservationGatewayHttpClientTest {
     @Test
     @DisplayName("Deve retornar falha com o motivo quando o stock-service responde reserved=false")
     void reserve_ShouldReturnFailureWithMotivo_WhenServiceRespondsPending() {
-        when(restTemplate.postForObject(any(String.class), any(), eq(StockReservationResponseDto.class)))
-                .thenReturn(new StockReservationResponseDto(false, "sem peça em estoque"));
+        when(restTemplate.exchange(
+                any(String.class),
+                eq(HttpMethod.POST),
+                any(HttpEntity.class),
+                eq(StockReservationResponseDto.class)))
+                .thenReturn(ResponseEntity.ok(new StockReservationResponseDto(false, "sem peça em estoque")));
 
         StockReservationResult result = client.reserve(serviceOrderId, List.of(new MaterialQuantity(materialId, 2)));
 
@@ -66,8 +83,12 @@ class StockReservationGatewayHttpClientTest {
     @Test
     @DisplayName("Deve retornar falha quando a resposta do stock-service vier vazia")
     void reserve_ShouldReturnFailure_WhenResponseIsNull() {
-        when(restTemplate.postForObject(any(String.class), any(), eq(StockReservationResponseDto.class)))
-                .thenReturn(null);
+        when(restTemplate.exchange(
+                any(String.class),
+                eq(HttpMethod.POST),
+                any(HttpEntity.class),
+                eq(StockReservationResponseDto.class)))
+                .thenReturn(ResponseEntity.ok(null));
 
         StockReservationResult result = client.reserve(serviceOrderId, List.of(new MaterialQuantity(materialId, 2)));
 
@@ -80,12 +101,18 @@ class StockReservationGatewayHttpClientTest {
     void consume_ShouldPostToConsumeEndpoint() {
         client.consume(serviceOrderId, List.of(new MaterialQuantity(materialId, 3)));
 
-        ArgumentCaptor<StockReservationRequestDto> captor = ArgumentCaptor.forClass(StockReservationRequestDto.class);
-        verify(restTemplate).postForLocation(eq(STOCK_SERVICE_URL + "/stock/reservations/consume"), captor.capture());
+        ArgumentCaptor<HttpEntity<StockReservationRequestDto>> captor = ArgumentCaptor.forClass(HttpEntity.class);
+        verify(restTemplate).exchange(
+                eq(STOCK_SERVICE_URL + "/stock/reservations/consume"),
+                eq(HttpMethod.POST),
+                captor.capture(),
+                eq(Void.class));
 
-        assertThat(captor.getValue().serviceOrderId()).isEqualTo(serviceOrderId);
-        assertThat(captor.getValue().items()).hasSize(1);
-        assertThat(captor.getValue().items().get(0).materialId()).isEqualTo(materialId);
-        assertThat(captor.getValue().items().get(0).quantity()).isEqualTo(3);
+        StockReservationRequestDto body = captor.getValue().getBody();
+        assertThat(body).isNotNull();
+        assertThat(body.serviceOrderId()).isEqualTo(serviceOrderId);
+        assertThat(body.items()).hasSize(1);
+        assertThat(body.items().get(0).materialId()).isEqualTo(materialId);
+        assertThat(body.items().get(0).quantity()).isEqualTo(3);
     }
 }
