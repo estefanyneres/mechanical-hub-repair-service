@@ -32,11 +32,14 @@ public class SecurityFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
         String token = recoverToken(request);
+        System.err.println("[DEBUG-JWT] token presente=" + (token != null) + " tamanho=" + (token == null ? -1 : token.length()));
 
         if (token != null) {
             DecodedJWT decoded = jwtValidator.decode(token);
+            System.err.println("[DEBUG-JWT] decoded != null: " + (decoded != null));
             if (decoded != null) {
                 String profile = jwtValidator.getProfileClaim(decoded);
+                System.err.println("[DEBUG-JWT] profile claim=" + profile);
                 if (profile != null) {
                     var authentication = new UsernamePasswordAuthenticationToken(
                             decoded.getSubject(),

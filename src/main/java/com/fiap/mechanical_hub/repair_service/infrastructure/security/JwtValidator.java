@@ -28,6 +28,7 @@ public class JwtValidator {
                     .build()
                     .verify(token);
         } catch (JWTVerificationException exception) {
+            System.err.println("[DEBUG-JWT] verify falhou: " + exception.getClass().getName() + " - " + exception.getMessage());
             return null;
         }
     }
