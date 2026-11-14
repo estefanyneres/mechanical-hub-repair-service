@@ -47,10 +47,12 @@ public class SecurityFilter extends OncePerRequestFilter {
                             List.of(new SimpleGrantedAuthority("ROLE_" + profile.toUpperCase()))
                     );
                     SecurityContextHolder.getContext().setAuthentication(authentication);
+                    System.err.println("[DEBUG-JWT] authorities setadas=" + authentication.getAuthorities() + " isAuthenticated=" + authentication.isAuthenticated());
                 }
             }
         }
 
+        System.err.println("[DEBUG-JWT] path=" + request.getRequestURI() + " method=" + request.getMethod() + " contextAuth=" + SecurityContextHolder.getContext().getAuthentication());
         filterChain.doFilter(request, response);
     }
 
