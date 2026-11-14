@@ -1,5 +1,6 @@
 package com.fiap.mechanical_hub.repair_service.infrastructure.database.models;
 
+import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbAttribute;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbBean;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbPartitionKey;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbSecondaryPartitionKey;
@@ -30,15 +31,18 @@ public class ServiceModel {
     private List<MaterialRequirementItem> defaultMaterials = new ArrayList<>();
 
     @DynamoDbPartitionKey
+    @DynamoDbAttribute("PK")
     public String getPk() { return pk; }
     public void setPk(String pk) { this.pk = pk; }
 
     @DynamoDbSortKey
     @DynamoDbSecondarySortKey(indexNames = "EntityTypeIndex")
+    @DynamoDbAttribute("SK")
     public String getSk() { return sk; }
     public void setSk(String sk) { this.sk = sk; }
 
     @DynamoDbSecondaryPartitionKey(indexNames = "EntityTypeIndex")
+    @DynamoDbAttribute("EntityType")
     public String getEntityType() { return entityType; }
     public void setEntityType(String entityType) { this.entityType = entityType; }
 

@@ -4,7 +4,6 @@ import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.exceptions.JWTVerificationException;
 import com.auth0.jwt.interfaces.DecodedJWT;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -15,7 +14,6 @@ import org.springframework.stereotype.Component;
  * Le o perfil direto do claim "profile" embutido no token, sem consultar
  * nenhum banco de usuarios (este servico nao tem esse dado - ADR-001).
  */
-@Slf4j
 @Component
 public class JwtValidator {
 
@@ -30,7 +28,6 @@ public class JwtValidator {
                     .build()
                     .verify(token);
         } catch (JWTVerificationException exception) {
-            log.warn("[DEBUG-JWT] verify falhou: {} - {}", exception.getClass().getName(), exception.getMessage());
             return null;
         }
     }
