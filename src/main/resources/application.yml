@@ -23,7 +23,6 @@ logging:
   level:
     root: WARN
     com.fiap.mechanical_hub.repair_service: INFO
-    org.springframework.security: DEBUG
 
 management:
   endpoints:

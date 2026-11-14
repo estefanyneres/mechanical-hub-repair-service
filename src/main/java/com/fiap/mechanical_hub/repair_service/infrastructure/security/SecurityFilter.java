@@ -5,7 +5,6 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -20,7 +19,6 @@ import java.util.List;
  * proprio token (claim "profile", ver JwtValidator), nenhuma consulta a
  * banco de usuarios e necessaria (este servico nao tem esse dado).
  */
-@Slf4j
 @Component
 public class SecurityFilter extends OncePerRequestFilter {
 
@@ -34,14 +32,11 @@ public class SecurityFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
         String token = recoverToken(request);
-        log.warn("[DEBUG-JWT] token presente={} tamanho={}", token != null, token == null ? -1 : token.length());
 
         if (token != null) {
             DecodedJWT decoded = jwtValidator.decode(token);
-            log.warn("[DEBUG-JWT] decoded != null: {}", decoded != null);
             if (decoded != null) {
                 String profile = jwtValidator.getProfileClaim(decoded);
-                log.warn("[DEBUG-JWT] profile claim={}", profile);
                 if (profile != null) {
                     var authentication = new UsernamePasswordAuthenticationToken(
                             decoded.getSubject(),
@@ -49,12 +44,10 @@ public class SecurityFilter extends OncePerRequestFilter {
                             List.of(new SimpleGrantedAuthority("ROLE_" + profile.toUpperCase()))
                     );
                     SecurityContextHolder.getContext().setAuthentication(authentication);
-                    log.warn("[DEBUG-JWT] authorities setadas={} isAuthenticated={}", authentication.getAuthorities(), authentication.isAuthenticated());
                 }
             }
         }
 
-        log.warn("[DEBUG-JWT] path={} method={} contextAuth={}", request.getRequestURI(), request.getMethod(), SecurityContextHolder.getContext().getAuthentication());
         filterChain.doFilter(request, response);
     }
 
