@@ -2,6 +2,7 @@ package com.fiap.mechanical_hub.repair_service.infrastructure.messaging;
 
 import com.fiap.mechanical_hub.repair_service.application.dto.saga.ExecucaoFalhouEvent;
 import com.fiap.mechanical_hub.repair_service.application.dto.saga.ExecucaoFinalizadaEvent;
+import com.fiap.mechanical_hub.repair_service.application.dto.saga.ExecucaoIniciadaEvent;
 import com.fiap.mechanical_hub.repair_service.application.dto.saga.MaterialIndisponivelEvent;
 import com.fiap.mechanical_hub.repair_service.application.dto.saga.MaterialReservadoEvent;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
@@ -26,6 +27,11 @@ public class SagaEventPublisher {
     public void publishMaterialIndisponivel(UUID serviceOrderId, String motivo) {
         rabbitTemplate.convertAndSend(RabbitMQConfig.SAGA_EXCHANGE, RabbitMQConfig.ROUTING_KEY_MATERIAL_INDISPONIVEL,
                 new MaterialIndisponivelEvent(serviceOrderId, motivo));
+    }
+
+    public void publishExecucaoIniciada(UUID serviceOrderId) {
+        rabbitTemplate.convertAndSend(RabbitMQConfig.SAGA_EXCHANGE, RabbitMQConfig.ROUTING_KEY_EXECUCAO_INICIADA,
+                new ExecucaoIniciadaEvent(serviceOrderId));
     }
 
     public void publishExecucaoFinalizada(UUID serviceOrderId) {

@@ -79,7 +79,10 @@ public class OrderTaskUseCase {
                 .orElseThrow(() -> new NotFoundException("Tarefa não encontrada com ID: " + taskId));
 
         switch (targetStatus) {
-            case INICIADO -> task.start();
+            case INICIADO -> {
+                task.start();
+                publishIfFirstTaskStarted(serviceOrderId, task.getId());
+            }
             case FINALIZADO -> {
                 task.finish();
                 consumeTaskMaterials(serviceOrderId, task);
@@ -91,6 +94,21 @@ public class OrderTaskUseCase {
 
         if (targetStatus == TaskStatusEnum.FINALIZADO) {
             publishIfOrderFullyFinished(serviceOrderId);
+        }
+    }
+
+    /**
+     * Publica execucao.iniciada so quando NENHUMA outra tarefa da OS ja
+     * saiu de PENDENTE -- o core-service so quer saber do primeiro
+     * INICIADO (TASK-048), nao de cada tarefa individual.
+     */
+    private void publishIfFirstTaskStarted(UUID serviceOrderId, UUID currentTaskId) {
+        boolean alreadyStarted = orderTaskGateway.findByServiceOrderId(serviceOrderId).stream()
+                .anyMatch(t -> !t.getId().equals(currentTaskId) && t.getStatus() != TaskStatusEnum.PENDENTE);
+
+        if (!alreadyStarted) {
+            publisher.publishExecucaoIniciada(serviceOrderId);
+            log.info("Primeira tarefa da OS {} iniciada - execucao.iniciada publicado", serviceOrderId);
         }
     }
 
