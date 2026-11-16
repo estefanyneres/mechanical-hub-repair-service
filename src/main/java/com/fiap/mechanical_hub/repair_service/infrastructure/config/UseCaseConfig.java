@@ -1,5 +1,6 @@
 package com.fiap.mechanical_hub.repair_service.infrastructure.config;
 
+import com.fiap.mechanical_hub.repair_service.application.gateways.CoreServiceGateway;
 import com.fiap.mechanical_hub.repair_service.application.gateways.MaterialGateway;
 import com.fiap.mechanical_hub.repair_service.application.gateways.OrderTaskGateway;
 import com.fiap.mechanical_hub.repair_service.application.gateways.ServiceGateway;
@@ -48,9 +49,10 @@ public class UseCaseConfig {
             MaterialUseCase materialUseCase,
             OrderTaskPresenter orderTaskPresenter,
             SagaEventPublisher publisher,
-            StockReservationGateway stockReservationGateway) {
+            StockReservationGateway stockReservationGateway,
+            CoreServiceGateway coreServiceGateway) {
         return new OrderTaskUseCase(orderTaskGateway, serviceUseCase, materialUseCase, orderTaskPresenter,
-                publisher, stockReservationGateway);
+                publisher, stockReservationGateway, coreServiceGateway);
     }
 
     @Bean

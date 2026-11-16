@@ -7,6 +7,9 @@ dynamodb:
 stock-service:
   url: ${STOCK_SERVICE_URL:http://stock-service.stock-service.svc.cluster.local}
 
+core-service:
+  url: ${CORE_SERVICE_URL:http://core-service.core-service.svc.cluster.local}
+
 spring:
   rabbitmq:
     host: ${RABBITMQ_HOST}

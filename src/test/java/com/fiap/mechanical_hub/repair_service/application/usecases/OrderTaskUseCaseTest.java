@@ -3,6 +3,7 @@ package com.fiap.mechanical_hub.repair_service.application.usecases;
 import com.fiap.mechanical_hub.repair_service.application.dto.ordertask.CreateOrderTaskRequest;
 import com.fiap.mechanical_hub.repair_service.application.dto.ordertask.MaterialQuantityRequest;
 import com.fiap.mechanical_hub.repair_service.application.dto.ordertask.OrderTaskResponse;
+import com.fiap.mechanical_hub.repair_service.application.gateways.CoreServiceGateway;
 import com.fiap.mechanical_hub.repair_service.application.gateways.MaterialQuantity;
 import com.fiap.mechanical_hub.repair_service.application.gateways.OrderTaskGateway;
 import com.fiap.mechanical_hub.repair_service.application.gateways.StockReservationGateway;
@@ -49,6 +50,8 @@ class OrderTaskUseCaseTest {
     private SagaEventPublisher publisher;
     @Mock
     private StockReservationGateway stockReservationGateway;
+    @Mock
+    private CoreServiceGateway coreServiceGateway;
 
     private OrderTaskUseCase useCase;
     private UUID serviceOrderId;
@@ -56,7 +59,7 @@ class OrderTaskUseCaseTest {
     @BeforeEach
     void setUp() {
         useCase = new OrderTaskUseCase(orderTaskGateway, serviceUseCase, materialUseCase, presenter, publisher,
-                stockReservationGateway);
+                stockReservationGateway, coreServiceGateway);
         serviceOrderId = UUID.randomUUID();
     }
 
@@ -136,6 +139,7 @@ class OrderTaskUseCaseTest {
         OrderTask task = OrderTask.create(serviceOrderId, service, List.of());
         UUID taskId = task.getId();
 
+        when(coreServiceGateway.isReadyForExecution(serviceOrderId)).thenReturn(true);
         when(orderTaskGateway.findById(serviceOrderId, taskId)).thenReturn(Optional.of(task));
         when(orderTaskGateway.findByServiceOrderId(serviceOrderId)).thenReturn(List.of(task));
 
@@ -155,6 +159,7 @@ class OrderTaskUseCaseTest {
         OrderTask taskToStart = OrderTask.create(serviceOrderId, service, List.of());
         UUID taskId = taskToStart.getId();
 
+        when(coreServiceGateway.isReadyForExecution(serviceOrderId)).thenReturn(true);
         when(orderTaskGateway.findById(serviceOrderId, taskId)).thenReturn(Optional.of(taskToStart));
         when(orderTaskGateway.findByServiceOrderId(serviceOrderId))
                 .thenReturn(List.of(alreadyStartedTask, taskToStart));
@@ -162,6 +167,24 @@ class OrderTaskUseCaseTest {
         useCase.updateStatus(serviceOrderId, taskId, "INICIADO");
 
         verify(orderTaskGateway).save(taskToStart);
+        verifyNoInteractions(publisher);
+    }
+
+    @Test
+    @DisplayName("Deve rejeitar INICIADO quando o core-service informa que a OS ainda não está pronta pra execução")
+    void updateStatus_ShouldReject_WhenOrderNotReadyForExecution() {
+        ServiceData service = defaultService();
+        OrderTask task = OrderTask.create(serviceOrderId, service, List.of());
+        UUID taskId = task.getId();
+
+        when(coreServiceGateway.isReadyForExecution(serviceOrderId)).thenReturn(false);
+        when(orderTaskGateway.findById(serviceOrderId, taskId)).thenReturn(Optional.of(task));
+
+        assertThatThrownBy(() -> useCase.updateStatus(serviceOrderId, taskId, "INICIADO"))
+                .isInstanceOf(BusinessRuleException.class)
+                .hasMessageContaining("não está pronta para execução");
+
+        verify(orderTaskGateway, never()).save(any());
         verifyNoInteractions(publisher);
     }
 
