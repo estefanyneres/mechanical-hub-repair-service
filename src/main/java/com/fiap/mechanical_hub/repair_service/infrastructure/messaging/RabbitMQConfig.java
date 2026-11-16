@@ -26,6 +26,12 @@ import org.springframework.context.annotation.Configuration;
  *   repair-service PUBLICA:
  *     - "material.reservado"    {serviceOrderId}           (reserva OK, em qualquer dos dois gatilhos)
  *     - "material.indisponivel" {serviceOrderId, motivo}   (faltou peça)
+ *     - "execucao.iniciada"     {serviceOrderId}           (TASK-048 - mecanico marcou a PRIMEIRA tarefa da
+ *                                                           OS como INICIADO. Core-service reage movendo a
+ *                                                           OS pra EM_EXECUCAO -- antes disso nao acontecia,
+ *                                                           entao a OS nunca saia de PRONTO_PARA_EXECUCAO e
+ *                                                           o execucao.finalizada subsequente caia num
+ *                                                           InvalidOrderTransitionException, TASK-046)
  *     - "execucao.finalizada"   {serviceOrderId}           (TASK-023/024 - todas as tarefas da OS concluídas)
  *     - "execucao.falhou"       {serviceOrderId, motivo}  (TASK-024 - falha durante a execucao manual ja
  *                                                           iniciada, reportada pelo mecanico via
@@ -44,6 +50,7 @@ public class RabbitMQConfig {
     public static final String ROUTING_KEY_ESTOQUE_REABASTECIDO = "estoque.reabastecido";
     public static final String ROUTING_KEY_MATERIAL_RESERVADO = "material.reservado";
     public static final String ROUTING_KEY_MATERIAL_INDISPONIVEL = "material.indisponivel";
+    public static final String ROUTING_KEY_EXECUCAO_INICIADA = "execucao.iniciada";
     public static final String ROUTING_KEY_EXECUCAO_FINALIZADA = "execucao.finalizada";
     public static final String ROUTING_KEY_EXECUCAO_FALHOU = "execucao.falhou";
 

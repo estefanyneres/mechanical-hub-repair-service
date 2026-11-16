@@ -130,17 +130,38 @@ class OrderTaskUseCaseTest {
     }
 
     @Test
-    @DisplayName("Deve iniciar uma tarefa sem publicar evento de finalização")
-    void updateStatus_ShouldStartTask_WithoutPublishingEvent() {
+    @DisplayName("Deve publicar execucao.iniciada quando a primeira tarefa da OS é iniciada")
+    void updateStatus_ShouldPublishExecucaoIniciada_WhenFirstTaskStarts() {
         ServiceData service = defaultService();
         OrderTask task = OrderTask.create(serviceOrderId, service, List.of());
         UUID taskId = task.getId();
 
         when(orderTaskGateway.findById(serviceOrderId, taskId)).thenReturn(Optional.of(task));
+        when(orderTaskGateway.findByServiceOrderId(serviceOrderId)).thenReturn(List.of(task));
 
         useCase.updateStatus(serviceOrderId, taskId, "INICIADO");
 
         verify(orderTaskGateway).save(task);
+        verify(publisher).publishExecucaoIniciada(serviceOrderId);
+    }
+
+    @Test
+    @DisplayName("Não deve publicar execucao.iniciada se outra tarefa da OS já tinha sido iniciada antes")
+    void updateStatus_ShouldNotPublishExecucaoIniciada_WhenAnotherTaskAlreadyStarted() {
+        ServiceData service = defaultService();
+        OrderTask alreadyStartedTask = OrderTask.create(serviceOrderId, defaultService(), List.of());
+        alreadyStartedTask.start();
+
+        OrderTask taskToStart = OrderTask.create(serviceOrderId, service, List.of());
+        UUID taskId = taskToStart.getId();
+
+        when(orderTaskGateway.findById(serviceOrderId, taskId)).thenReturn(Optional.of(taskToStart));
+        when(orderTaskGateway.findByServiceOrderId(serviceOrderId))
+                .thenReturn(List.of(alreadyStartedTask, taskToStart));
+
+        useCase.updateStatus(serviceOrderId, taskId, "INICIADO");
+
+        verify(orderTaskGateway).save(taskToStart);
         verifyNoInteractions(publisher);
     }
 
