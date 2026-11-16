@@ -3,6 +3,7 @@ package com.fiap.mechanical_hub.repair_service.application.usecases;
 import com.fiap.mechanical_hub.repair_service.application.dto.ordertask.CreateOrderTaskRequest;
 import com.fiap.mechanical_hub.repair_service.application.dto.ordertask.MaterialQuantityRequest;
 import com.fiap.mechanical_hub.repair_service.application.dto.ordertask.OrderTaskResponse;
+import com.fiap.mechanical_hub.repair_service.application.gateways.CoreServiceGateway;
 import com.fiap.mechanical_hub.repair_service.application.gateways.MaterialQuantity;
 import com.fiap.mechanical_hub.repair_service.application.gateways.OrderTaskGateway;
 import com.fiap.mechanical_hub.repair_service.application.gateways.StockReservationGateway;
@@ -38,16 +39,19 @@ public class OrderTaskUseCase {
     private final OrderTaskPresenter presenter;
     private final SagaEventPublisher publisher;
     private final StockReservationGateway stockReservationGateway;
+    private final CoreServiceGateway coreServiceGateway;
 
     public OrderTaskUseCase(OrderTaskGateway orderTaskGateway, ServiceUseCase serviceUseCase,
                              MaterialUseCase materialUseCase, OrderTaskPresenter presenter,
-                             SagaEventPublisher publisher, StockReservationGateway stockReservationGateway) {
+                             SagaEventPublisher publisher, StockReservationGateway stockReservationGateway,
+                             CoreServiceGateway coreServiceGateway) {
         this.orderTaskGateway = orderTaskGateway;
         this.serviceUseCase = serviceUseCase;
         this.materialUseCase = materialUseCase;
         this.presenter = presenter;
         this.publisher = publisher;
         this.stockReservationGateway = stockReservationGateway;
+        this.coreServiceGateway = coreServiceGateway;
     }
 
     public OrderTaskResponse create(UUID serviceOrderId, CreateOrderTaskRequest request) {
@@ -80,6 +84,7 @@ public class OrderTaskUseCase {
 
         switch (targetStatus) {
             case INICIADO -> {
+                validateOrderReadyForExecution(serviceOrderId);
                 task.start();
                 publishIfFirstTaskStarted(serviceOrderId, task.getId());
             }
@@ -94,6 +99,20 @@ public class OrderTaskUseCase {
 
         if (targetStatus == TaskStatusEnum.FINALIZADO) {
             publishIfOrderFullyFinished(serviceOrderId);
+        }
+    }
+
+    /**
+     * TASK-047: antes, o repair-service aceitava INICIADO sem saber se a OS
+     * tinha pagamento/material confirmados do outro lado -- so descobria
+     * que algo estava errado depois, quando execucao.finalizada chegava no
+     * core-service e era rejeitada (ver TASK-046). Agora confirma de forma
+     * sincrona ANTES de aceitar.
+     */
+    private void validateOrderReadyForExecution(UUID serviceOrderId) {
+        if (!coreServiceGateway.isReadyForExecution(serviceOrderId)) {
+            throw new BusinessRuleException(
+                    "Não é possível iniciar a execução: a ordem de serviço ainda não está pronta para execução");
         }
     }
 

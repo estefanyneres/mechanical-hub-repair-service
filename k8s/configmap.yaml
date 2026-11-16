@@ -10,5 +10,6 @@ data:
   RABBITMQ_PORT: "5672"
   RABBITMQ_USERNAME: "mechanical-hub"
   STOCK_SERVICE_URL: "http://stock-service.stock-service.svc.cluster.local"
+  CORE_SERVICE_URL: "http://core-service.core-service.svc.cluster.local"
   TZ: "America/Sao_Paulo"
   SPRING_PROFILES_ACTIVE: "prod"
