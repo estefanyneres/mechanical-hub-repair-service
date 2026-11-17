@@ -67,7 +67,11 @@ Swagger UI: `http://localhost:8080/swagger-ui/index.html`
 ./mvnw test
 ```
 
-**134 testes**, **93% de cobertura** (gate SonarQube: 80% em código novo). Exclusões do Sonar: só classes de wiring puro do Spring (`SecurityConfiguration`, `RabbitMQConfig`).
+**134 testes**, **94,1% de cobertura** (gate SonarQube: 80% em código novo). Exclusões do Sonar: só classes de wiring puro do Spring (`SecurityConfiguration`, `RabbitMQConfig`).
+
+**Evidência de cobertura (SonarQube):**
+
+![Cobertura de testes - SonarQube](docs/desenhos/cobertura-sonar-fase-04.png)
 
 ## Deploy
 
