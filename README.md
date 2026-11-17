@@ -59,7 +59,9 @@ flowchart LR
 
 Variáveis de ambiente em `k8s/configmap.yaml`/`k8s/secret.yaml` (`DYNAMODB_TABLE_NAME`, `STOCK_SERVICE_URL`, `CORE_SERVICE_URL`, `RABBITMQ_HOST`, `JWT_SECRET`).
 
-Swagger UI: `http://localhost:8080/swagger-ui/index.html`
+Swagger UI local: `http://localhost:8080/swagger-ui/index.html`
+
+**Swagger UI público:** output `repair_service_swagger_url` da pipeline do [`api-gateway`](https://github.com/estefanyneres/mechanical-hub-api-gateway) — um ALB público dedicado só pra esse endpoint, porque os 4 microsserviços servem Swagger no mesmo path e o ALB/API Gateway compartilhado não tem como rotear por path pra decidir qual dos 4 usar. Muda a cada sessão nova do AWS Academy.
 
 ## Testes
 
@@ -67,7 +69,11 @@ Swagger UI: `http://localhost:8080/swagger-ui/index.html`
 ./mvnw test
 ```
 
-**134 testes**, **93% de cobertura** (gate SonarQube: 80% em código novo). Exclusões do Sonar: só classes de wiring puro do Spring (`SecurityConfiguration`, `RabbitMQConfig`).
+**134 testes**, **94,1% de cobertura** (gate SonarQube: 80% em código novo). Exclusões do Sonar: só classes de wiring puro do Spring (`SecurityConfiguration`, `RabbitMQConfig`).
+
+**Evidência de cobertura (SonarQube):**
+
+![Cobertura de testes - SonarQube](docs/desenhos/cobertura-sonar-fase-04.png)
 
 ## Deploy
 
