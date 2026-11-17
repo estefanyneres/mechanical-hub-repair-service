@@ -2,6 +2,10 @@
 
 Microsserviço de **catálogo, diagnóstico e execução de reparos** do Mechanical Hub (Fase 4 — Tech Challenge). Dono do catálogo de serviços/materiais e das tarefas de execução de cada Ordem de Serviço (OS), e participante ativo do Saga Pattern orquestrado pelo [`core-service`](https://github.com/estefanyneres/mechanical-hub-core-service).
 
+## Diagrama de infraestrutura
+
+![Infraestrutura AWS - Fase 4](docs/desenhos/mechanical-hub-infraestrutura-fase-04.jpg)
+
 ## Arquitetura
 
 Clean Architecture (`domain` / `application` / `infrastructure`):
