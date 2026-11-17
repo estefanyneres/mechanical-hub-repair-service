@@ -30,6 +30,17 @@ Reserva de material só acontece **depois do pagamento confirmado** — nunca na
 **Publica:** `material.reservado`, `material.indisponivel`, `execucao.iniciada`, `execucao.finalizada`, `execucao.falhou`
 **Consome:** `pagamento.confirmado`, `estoque.reabastecido`
 
+**Diagrama do fluxo** (quem fala com quem):
+
+```mermaid
+flowchart LR
+    O["core-service<br/>(orquestrador)"] <-->|eventos do Saga| MQ(("RabbitMQ<br/>saga.exchange"))
+    MQ <--> B["billing-service<br/>orçamento + pagamento"]
+    MQ <--> R["repair-service<br/>material + tarefas"]
+    MQ <--> S["stock-service<br/>estoque"]
+    R <-.REST síncrono.-> S
+```
+
 ## Tecnologias
 
 - Java 21 / Spring Boot 3.2
